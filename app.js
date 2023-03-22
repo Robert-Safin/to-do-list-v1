@@ -16,39 +16,22 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.set("view engine", "ejs");
 
-let day = new Date().getDay()
-
+let day = new Date();
+let options = {
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+};
+day = day.toLocaleDateString("en-US", options);
 // connect root
 app.get("/", (req, res) => {
-  switch (day) {
-    case 1:
-      day = "Monday";
-      break;
-    case 2:
-      day = "Tuesday";
-      break;
-    case 3:
-      day = "Wednesday";
-      break;
-    case 4:
-      day = "Thursday";
-      break;
-    case 5:
-      day = "Friday";
-      break;
-    case 6:
-      day = "Saturday";
-      break;
-    case 0:
-      day = "Sunday";
-      break;
-
-    default:
-      break;
-  }
-
   res.render("list", { day: day });
 });
+
+app.post('/', (req, res) => {
+  const toDo = req.body.toDo
+
+})
 
 // Start the server
 app.listen(3000, () => {
