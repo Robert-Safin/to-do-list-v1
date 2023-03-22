@@ -16,6 +16,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.set("view engine", "ejs");
 
+let toDos = []
+
 let day = new Date();
 let options = {
   weekday: "long",
@@ -25,12 +27,13 @@ let options = {
 day = day.toLocaleDateString("en-US", options);
 // connect root
 app.get("/", (req, res) => {
-  res.render("list", { day: day });
+  res.render("list", { day: day, toDos: toDos });
 });
 
 app.post('/', (req, res) => {
   const toDo = req.body.toDo
-
+  toDos.push(toDo);
+  res.redirect('/')
 })
 
 // Start the server

@@ -10,9 +10,9 @@
     <h1><%= day %></h1>
   </body>
   <ul>
-    <li>1</li>
-    <li>2</li>
-    <li>3</li>
+    <% toDos.forEach(toDo => { %>
+      <li><%=toDo%></li>
+    <% }); %>
   </ul>
   <form action="/" method="post">
     <input type="text" placeholder="new ToDO" name="toDo"/>
