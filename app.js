@@ -4,8 +4,8 @@ import bodyParser from "body-parser";
 import fetch from "node-fetch";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
-import getDay from './date.js';
-import mongoose from 'mongoose'
+import getDay from "./date.js";
+import mongoose from "mongoose";
 
 // create app
 const app = express();
@@ -18,66 +18,103 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.set("view engine", "ejs");
 
-
-
-mongoose.connect('mongodb://localhost/databaseName', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-  .then(() => console.log('Connected to MongoDB'))
-  .catch((err) => console.error('Failed to connect to MongoDB:', err));
-
-  const toDoSchema = new mongoose.Schema({
-    name: String,
-  });
-
-  const ToDo = mongoose.model('ToDo', toDoSchema);
-
-  const default1 = new ToDo ({
-    name: "Wake up",
+mongoose
+  .connect("mongodb://localhost/toDoList", {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
   })
+  .then(() => console.log("Connected to MongoDB"))
+  .catch((err) => console.error("Failed to connect to MongoDB:", err));
 
-  const default2 = new ToDo ({
-    name: "Work",
-  })
+const toDoSchema = new mongoose.Schema({
+  name: String,
+});
 
-  const default3 = new ToDo ({
-    name: "Eat",
-  })
+const ToDo = mongoose.model("ToDo", toDoSchema);
 
-const defaultItems = [default1, default2, default3]
+const default1 = new ToDo({
+  name: "Wake up",
+});
+
+const default2 = new ToDo({
+  name: "Work",
+});
+
+const default3 = new ToDo({
+  name: "Eat",
+});
+
+const defaultItems = [default1, default2, default3];
+
+async function readDB() {
+  try {
+    let items = await ToDo.find({});
+    return items;
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+async function insertToDo() {
+  try {
+    await ToDo.insertMany(defaultItems);
+    console.log("Added successfully");
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+
+async function connect() {
+  const items = await readDB();
+  if (items.length === 0) {
+    await insertToDo();
+  }
+  return items
+}
+
+const toDos = await connect()
 
 
 
 
-let toDos = []
-let toWorks = []
 
-const day = getDay()
+
+
+
+
+
+
+
+
+
+
+
+let toWorks = [];
+
+const day = getDay();
 
 // connect root
 app.get("/", (req, res) => {
   res.render("list", { listTitle: "Today", toDos: toDos });
 });
 
-app.post('/', (req, res) => {
-  const toDo = req.body.toDo
-  if (req.body.list === "Work") {
-    toWorks.push(toDo);
-    res.redirect('/work')
-  } else {
+app.post("/", (req, res) => {
+  const toDo = new ToDo({
+    name: req.body.toDo,
+  });
+  toDo.save()
     toDos.push(toDo);
-    res.redirect('/')
-  }
-})
+    res.redirect("/");
+});
 
-app.get('/work', (req, res) => {
-  res.render("list", {listTitle: "Work", toDos: toWorks})
-})
+// app.get("/work", (req, res) => {
+//   res.render("list", { listTitle: "Work", toDos: toWorks });
+// });
 
-app.get('/about', (req, res) => {
-  res.render("about")
-})
+app.get("/about", (req, res) => {
+  res.render("about");
+});
 
 // Start the server
 app.listen(3000, () => {
