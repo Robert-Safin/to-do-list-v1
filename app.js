@@ -5,6 +5,7 @@ import fetch from "node-fetch";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import getDay from './date.js';
+import mongoose from 'mongoose'
 
 // create app
 const app = express();
@@ -17,6 +18,38 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.set("view engine", "ejs");
 
+
+
+mongoose.connect('mongodb://localhost/databaseName', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+})
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => console.error('Failed to connect to MongoDB:', err));
+
+  const toDoSchema = new mongoose.Schema({
+    name: String,
+  });
+
+  const ToDo = mongoose.model('ToDo', toDoSchema);
+
+  const default1 = new ToDo ({
+    name: "Wake up",
+  })
+
+  const default2 = new ToDo ({
+    name: "Work",
+  })
+
+  const default3 = new ToDo ({
+    name: "Eat",
+  })
+
+const defaultItems = [default1, default2, default3]
+
+
+
+
 let toDos = []
 let toWorks = []
 
@@ -24,7 +57,7 @@ const day = getDay()
 
 // connect root
 app.get("/", (req, res) => {
-  res.render("list", { listTitle: day, toDos: toDos });
+  res.render("list", { listTitle: "Today", toDos: toDos });
 });
 
 app.post('/', (req, res) => {
