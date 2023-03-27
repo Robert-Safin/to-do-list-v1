@@ -18,13 +18,29 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 app.set("view engine", "ejs");
 
-mongoose
-  .connect("mongodb://localhost/toDoList", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("Failed to connect to MongoDB:", err));
+
+
+
+
+
+
+
+connectToDb()
+
+async function connectToDb() {
+  try {
+  await mongoose.connect('mongodb://127.0.0.1:27017/toDoList', {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      });
+      console.log('connected to DB');
+    } catch(error) {
+      console.log(error);
+    }
+}
+
+
+
 
 const toDoSchema = new mongoose.Schema({
   name: String,
@@ -32,48 +48,14 @@ const toDoSchema = new mongoose.Schema({
 
 const ToDo = mongoose.model("ToDo", toDoSchema);
 
-const default1 = new ToDo({
-  name: "Wake up",
-});
-
-const default2 = new ToDo({
-  name: "Work",
-});
-
-const default3 = new ToDo({
-  name: "Eat",
-});
-
-const defaultItems = [default1, default2, default3];
-
-async function readDB() {
-  try {
-    let items = await ToDo.find({});
-    return items;
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-async function insertToDo() {
-  try {
-    await ToDo.insertMany(defaultItems);
-    console.log("Added successfully");
-  } catch (error) {
-    console.log(error);
-  }
-}
-
-
-async function connect() {
-  const items = await readDB();
+async function saveTip() {
+  const items = await ToDo.find({});
   if (items.length === 0) {
-    await insertToDo();
+    await ToDo.create({name:"To Do List"});
   }
-  return items
 }
 
-const toDos = await connect()
+saveTip();
 
 
 
@@ -86,17 +68,13 @@ const toDos = await connect()
 
 
 
-
-
-
-
-let toWorks = [];
-
-const day = getDay();
-
-// connect root
-app.get("/", (req, res) => {
-  res.render("list", { listTitle: "Today", toDos: toDos });
+app.get("/", async(req, res) => {
+  try {
+    const toDos = await ToDo.find({})
+    res.render("list", { listTitle: "Today", toDos: toDos });
+  } catch(error) {
+    console.log(error);
+  }
 });
 
 app.post("/", (req, res) => {
@@ -104,17 +82,25 @@ app.post("/", (req, res) => {
     name: req.body.toDo,
   });
   toDo.save()
-    toDos.push(toDo);
     res.redirect("/");
 });
 
-// app.get("/work", (req, res) => {
-//   res.render("list", { listTitle: "Work", toDos: toWorks });
-// });
-
-app.get("/about", (req, res) => {
-  res.render("about");
+app.post('/delete', async (req, res) => {
+  const itemId = req.body.checkbox.trim()
+  try {
+    await ToDo.deleteOne({_id:itemId})
+  } catch (error) {
+    console.log(error);
+  }
+  res.redirect("/");
 });
+
+
+
+
+
+
+
 
 // Start the server
 app.listen(3000, () => {
